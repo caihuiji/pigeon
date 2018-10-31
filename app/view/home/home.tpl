@@ -5,13 +5,9 @@
     <title>pigeon</title>
     <link rel="stylesheet" href="/public/css/bootstrap.min.css">
 </head>
-<body>
+<div id="main">
 
-<header>
-</header>
-<nav></nav>
-<main>
-</main>
-<script src="/public/js/lib/vue.js"></script>
+</div>
+<script src="/public/js/page/home.main.js"></script>
 </body>
 </html>

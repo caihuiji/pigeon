@@ -17,6 +17,8 @@
     "egg-mock": "^3.14.0",
     "eslint": "^4.11.0",
     "eslint-config-egg": "^6.0.0",
+    "webpack": "^4.23.1",
+    "webpack-cli": "^3.1.2",
     "webstorm-disable-index": "^1.2.0"
   },
   "engines": {
