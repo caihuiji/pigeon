@@ -8,4 +8,5 @@ var app = new Vue({
         message: 'Hello Vue!'
     },
     template: '<App/>',
+    components: { App }
 });

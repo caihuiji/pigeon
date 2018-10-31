@@ -8,6 +8,6 @@
 <div id="main">
 
 </div>
-<script src="/public/js/page/home.main.js"></script>
+<script src="/public/js/main-build.js"></script>
 </body>
 </html>

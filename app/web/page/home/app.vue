@@ -26,7 +26,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="css">
     #app {
         font-family: "Avenir", Helvetica, Arial, sans-serif;
 
