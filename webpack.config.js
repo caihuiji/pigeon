@@ -14,4 +14,27 @@ module.exports = {
       vue$: 'vue/dist/vue.esm.js',
     },
   },
+
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader',
+        options: {
+          loaders: {
+            scss: [
+              'vue-style-loader',
+              'css-loader',
+              'sass-loader',
+            ],
+            sass: [
+              'vue-style-loader',
+              'css-loader',
+              'sass-loader?indentedSyntax',
+            ],
+          },
+        },
+      },
+    ],
+  },
 };
