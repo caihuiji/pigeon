@@ -4,31 +4,24 @@
             <thead>
             <tr >
                 <th style="width:80px;">#</th>
-                <th >发布列表</th>
-                <th style="width:120px;">操作</th>
+                <th style="width:300px;">离线包-version</th>
+                <th style="width:280px;">创建时间</th>
+                <th style="width:280px;">变更时间</th>
+                <th style="width:120px;">状态</th>
+                <th >操作</th>
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <th scope="row">1</th>
-                <td>运营活动A</td>
+            <tr v-for="(item,index) in list">
+                <td>{{index}}</td>
+                <td>{{item.version}}</td>
+                <td>{{item.create_time | formatDate('yyyy-MM-dd')}}</td>
+                <td>{{item.update_time | formatDate('yyyy-MM-dd')}}</td>
                 <td>
-                    <a href="javascript:;">查看</a> | <a href="javascript:;">编辑</a>
+                    {{item.status}}
                 </td>
-            </tr>
-            <tr>
-                <th scope="row">2</th>
-                <td>运营活动A</td>
-                <td>
-                    <a href="javascript:;">查看</a> | <a href="javascript:;">编辑</a>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">3</th>
-                <td>运营活动A</td>
-                <td>
-                    <a href="javascript:;">查看</a> | <a href="javascript:;">编辑</a>
-                </td>
+                <td></td>
+
             </tr>
             </tbody>
         </table>
@@ -37,19 +30,28 @@
 
 <script>
 
-  export default {
-    name: 'js-app',
-    data () {
-      return {
-        msg: 'Welcome to Your Vue.js'
-      }
-    },
-    methods: {
-      async fetchData() {
-        const data = await getData();
-        this.msg = data;
-      }
+    import axios from 'axios';
+
+    export default {
+        name: 'js-app',
+        data () {
+            return {
+                list : []
+            }
+        },
+
+        created () {
+            this.fetchData();
+        },
+        methods: {
+            async fetchData() {
+                return axios.get('/detail/list')
+                    .then(data => {
+                        const list = data.data.data;
+                        this.list = list;
+                    })
+            }
+        }
     }
-  }
 </script>
 

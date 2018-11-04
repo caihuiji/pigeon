@@ -5,3 +5,5 @@ async、await ? 跟es6 yield * function 有什么区别
 vue2 vs vue3
 
 babel presets?
+
+export default
