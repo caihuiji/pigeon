@@ -1,0 +1,12 @@
+.main-wrap {
+    max-width:1280px;
+    margin:0 auto;
+}
+
+a, a:hover {
+    color: #0C4C7F;
+}
+
+a:hover {
+    text-decoration: underline;
+}

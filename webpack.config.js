@@ -4,7 +4,10 @@ const webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 module.exports = {
-  entry: [ 'babel-polyfill', './app/web/page/home.main.js' ], // 项目的入口文件，webpack会从main.js开始，把所有依赖的js都加载打包
+  entry: {
+    main: [ 'babel-polyfill', './app/web/page/main.js' ],
+    detail: [ 'babel-polyfill', './app/web/page/detail.js' ],
+  }, // 项目的入口文件，webpack会从main.js开始，把所有依赖的js都加载打包
   output: {
     path: path.resolve(__dirname, './app/public/'), // 项目的打包文件路径
     filename: 'js/[name]-build.js', // 打包后的文件名
@@ -13,6 +16,7 @@ module.exports = {
   resolve: {
     alias: {
       vue$: 'vue/dist/vue.esm.js',
+      axios$: 'axios/dist/axios.js',
     },
   },
 
