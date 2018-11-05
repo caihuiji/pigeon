@@ -46,14 +46,11 @@ a:hover {
     text-align: right;
     position: absolute;
     /* width: 500px; */
-    top: -30px;
+    top: -25px;
     right: 10px;
     font-size: 13px;
 }
 
-.table  thead th {
-    border-top:0;
-}
 
 .main-wrap {
     position: relative;
