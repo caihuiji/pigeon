@@ -1,6 +1,16 @@
-.main-wrap {
+body {
+    background: #e9eaeb;
+}
+.wrap {
+    padding-left:10px;
+    padding-right:10px;
     max-width:1280px;
-    margin:0 auto;
+    margin:20px auto 0;
+    background-color: #FFF;
+    border-radius: 4px;
+    min-height: 592px;
+    -webkit-box-shadow: 0 1px 2px 0 rgba(0,0,0,.15);
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,.15);
 }
 
 a, a:hover {
@@ -10,3 +20,42 @@ a, a:hover {
 a:hover {
     text-decoration: underline;
 }
+
+.header-title {
+    font-size:24px;
+    line-height: 60px;
+    border-bottom: 1px solid #d8d8d8;
+}
+
+
+.header-top{
+    font-size: 12px;
+    background: #393d49;
+    height: 30px;
+}
+
+.breadcrumb {
+    padding-left: 0;
+    padding-right: 0;
+    background: #fff;
+    font-size:12px;
+    margin:0;
+}
+
+.operate-bar {
+    text-align: right;
+    position: absolute;
+    /* width: 500px; */
+    top: -30px;
+    right: 10px;
+    font-size: 13px;
+}
+
+.table  thead th {
+    border-top:0;
+}
+
+.main-wrap {
+    position: relative;
+}
+

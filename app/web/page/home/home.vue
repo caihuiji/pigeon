@@ -1,5 +1,8 @@
 <template>
     <div id="js-app">
+        <div class="operate-bar">
+            <a class="btn btn-default btn-sm btn-outline-primary" href="#" role="button">添加</a>
+        </div>
         <table class="table table-hover">
             <thead>
             <tr >
@@ -7,7 +10,7 @@
                 <th >名称</th>
                 <th style="width:120px;">负责人</th>
                 <th style="width:120px;">创建时间</th>
-                <th style="width:120px;">操作</th>
+                <th style="width:200px;">操作</th>
             </tr>
             </thead>
             <tbody>

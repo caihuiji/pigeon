@@ -7,17 +7,20 @@
     <link rel="stylesheet" href="/public/css/style.css">
 </head>
 <body>
-<div id="js-header">
+{% set breadcrumb = "detail" %}
+{% include "component/header.tpl" %}
+<div class="wrap">
+    {% include "component/header_nav.tpl" %}
+    <div class="main-wrap">
+        <div id="js-main" >
 
-</div>
-<div class="main-wrap">
-    <div id="js-main" >
+        </div>
+    </div>
 
+    <div id="js-footer">
     </div>
 </div>
 
-<div id="js-footer">
-</div>
 <script src="/public/js/detail-build.js"></script>
 </body>
 </html>

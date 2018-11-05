@@ -1,5 +1,8 @@
 <template>
     <div id="js-app">
+        <div class="operate-bar">
+            <a class="btn btn-default btn-sm btn-outline-primary" href="#" role="button">添加</a>
+        </div>
         <table class="table table-hover">
             <thead>
             <tr >
@@ -13,7 +16,7 @@
             </thead>
             <tbody>
             <tr v-for="(item,index) in list">
-                <td>{{index}}</td>
+                <td>{{index+1}}</td>
                 <td>{{item.version}}</td>
                 <td>{{item.create_time | formatDate('yyyy-MM-dd')}}</td>
                 <td>{{item.update_time | formatDate('yyyy-MM-dd')}}</td>
