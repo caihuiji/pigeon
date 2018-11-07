@@ -59,7 +59,23 @@
                     })
             },
             async uploadFile (file){
-                return;
+
+                let formData = new FormData();
+                formData.append('name', file.name);
+                formData.append('file', file);
+
+                let config = {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+
+                return axios.post('/detail/create', formData , config)
+                    .then(data => {
+                        const list = data.data.data;
+                        this.list = list;
+                    })
+
             },
             handleFileChange (e){
                 let input = e.target;
@@ -76,9 +92,10 @@
                     return ;
                 }
 
-                uploadFile(file)
-
-
+                this.uploadFile(file)
+                    .then(()=> {
+                        clearFileValue();
+                    })
             }
         }
     }

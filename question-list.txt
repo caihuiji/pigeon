@@ -10,3 +10,7 @@ export default
 
 
 polyfill 做什么？
+
+dialog show hide 更优雅的方式
+
+设置 has-error 更优雅的方式

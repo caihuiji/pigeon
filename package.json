@@ -4,10 +4,12 @@
   "description": "offline publiser",
   "private": true,
   "dependencies": {
+    "await-stream-ready": "^1.0.1",
     "axios": "^0.18.0",
     "egg": "^2.2.1",
     "egg-scripts": "^2.5.0",
     "egg-view-nunjucks": "^2.2.0",
+    "stream-wormhole": "^1.1.0",
     "vue": "^2.5.17"
   },
   "devDependencies": {

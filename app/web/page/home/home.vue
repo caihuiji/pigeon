@@ -30,32 +30,35 @@
 
         <div :class="['modal','fade' ]"  id="js_createProjectModal" tabindex="-1">
             <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" v-on:click="closeModalDialog" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title" id="myModalLabel">添加项目</h4>
+                <form @submit.prevent="addProject">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" v-on:click="closeModalDialog" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">添加项目</h4>
+                        </div>
+                        <div class="modal-body">
+                                <div :class="['form-group' , nameErr ? 'has-error' : '']" >
+                                    <label class="control-label" for="project-name">项目名称</label>
+                                    <input type="text" class="form-control" id="project-name" v-model="project.name" placeholder="项目名称">
+                                    <span  class="help-block">请填写2~20个字符</span>
+                                </div>
+                                <div :class="['form-group' , descErr ? 'has-error' : '']">
+                                    <label class="control-label" for="project-desc">项目描述</label>
+                                    <textarea style="resize: none" type="text" class="form-control" v-model="project.desc" id="project-desc" placeholder="项目描述"></textarea>
+                                    <span  class="help-block">最多填写50个字符</span>
+                                </div>
+                                <div :class="['form-group' , adminErr ? 'has-error' : '']">
+                                    <label class="control-label" for="project-admin">项目负责人</label>
+                                    <input type="text" class="form-control" id="project-admin" v-model="project.admin" placeholder="项目负责">
+                                    <span  class="help-block">至少填写一个负责人</span>
+                                </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal" v-on:click="closeModalDialog">取消</button>
+                            <input  class="btn btn-primary" type="submit"  value="添加">
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <form>
-                            <div class="form-group">
-                                <label for="project-name">项目名称</label>
-                                <input type="text" class="form-control" id="project-name" placeholder="项目名称">
-                            </div>
-                            <div class="form-group">
-                                <label for="project-desc">项目描述</label>
-                                <textarea style="resize: none" type="text" class="form-control" id="project-desc" placeholder="项目描述"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="project-admin">项目负责人</label>
-                                <input type="text" class="form-control" id="project-admin" placeholder="项目负责人">
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal" v-on:click="closeModalDialog">取消</button>
-                        <button type="button" class="btn btn-primary" v-on:click="addProject">添加</button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
         <div class="modal-backdrop fade " id="js_modal" style="display: none"></div>
@@ -73,6 +76,14 @@
         data () {
             return {
               list : [],
+              nameErr : false,
+              descErr : false,
+              adminErr : false,
+              project : {
+                  name : '',
+                  desc : '',
+                  admin : ''
+              }
             }
         },
 
@@ -81,23 +92,29 @@
         },
         methods: {
             async fetchData() {
-              return axios.get('/home/list')
+              return axios.get('/home/list' )
                 .then(data => {
                   const list = data.data.data;
                   this.list = list;
                 })
             },
 
-            async saveData(data) {
-                return axios.get('/home/list')
+            async saveData(formData) {
+                return axios.post('/home/create' , formData)
                     .then(data => {
-                        const list = data.data.data;
-                        this.list = list;
                         this.closeModalDialog();
+                        this.fetchData();
                     })
             },
 
             showModalDialog (){
+                this.project.name = "";
+                this.project.desc = "";
+                this.project.admin = "";
+                this.nameErr = false;
+                this.descErr = false;
+                this.adminErr = false;
+
                 document.body.classList.add('modal-open');
                 let dialog = document.querySelector('#js_createProjectModal');
                 let modal = document.querySelector('#js_modal')
@@ -122,8 +139,32 @@
                 },300)
             },
 
-            addProject (){
-                this.saveData();
+            validateFormData (formData){
+                if (formData.name.length <4 || formData.name.length >12){
+                    this.nameErr = true;
+                } else {
+                    this.nameErr = false;
+                }
+
+                if (formData.desc.length > 50){
+                    this.descErr = true;
+                } else {
+                    this.descErr = false;
+                }
+
+                if (formData.admin.length <= 0){
+                    this.adminErr = true;
+                } else {
+                    this.adminErr = false;
+                }
+
+                return !(this.nameErr || this.descErr || this.adminErr);
+            },
+
+            addProject (event){
+                if (this.validateFormData(this.project) ){
+                    this.saveData(  this.project );
+                }
             }
 
         }

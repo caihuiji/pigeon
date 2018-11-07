@@ -15,6 +15,11 @@ class HomeController extends Controller {
         { id: 4, create_time: new Date() - 0, name: 'sdfsdfsdf' },
       ] };
   }
+
+  async create(ctx) {
+    ctx.logger.info('request data: %j', ctx.request.body);
+    ctx.body = { ret: 0 };
+  }
 }
 
 
