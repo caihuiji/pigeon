@@ -21,9 +21,9 @@
                 <td>{{item.name}}</td>
                 <td>{{item.desc}}</td>
                 <td>{{item.admin}}</td>
-                <td>{{item.create_time | formatDate('yyyy-MM-dd') }}</td>
+                <td>{{item.create_time | formatDate('yyyy-MM-dd') }}  </td>
                 <td>
-                    <a href="/detail?id=item.id">查看</a> | <a href="javascript:;">编辑</a>
+                    <a :href="'/detail?id=' + item._id">查看</a> | <a href="javascript:;">编辑</a> | <a @click="deleteProject" :data-id="item._id" href="javascript:;">删除</a>
                 </td>
             </tr>
             </tbody>
@@ -146,7 +146,7 @@
             },
 
             validateFormData (formData){
-                if (formData.name.length <4 || formData.name.length >12){
+                if (formData.name.length <2 || formData.name.length >12){
                     this.nameErr = true;
                 } else {
                     this.nameErr = false;
@@ -171,6 +171,13 @@
                 if (this.validateFormData(this.project) ){
                     this.saveData(  this.project );
                 }
+            },
+
+            deleteProject (event){
+                return axios.post('/home/delete' , {id : event.target.getAttribute('data-id') })
+                    .then(data => {
+                        this.fetchData();
+                    })
             }
 
         }

@@ -22,5 +22,14 @@ module.exports = appInfo => {
     },
   };
 
+  config.mongoose = {
+    url: process.env.EGG_MONGODB_URL || 'mongodb://127.0.0.1:27017/pigeon',
+    options: {
+      server: {
+        poolSize: 20,
+      },
+    },
+  };
+
   return config;
 };

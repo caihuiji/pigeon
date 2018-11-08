@@ -1,4 +1,5 @@
 const Controller = require('egg').Controller;
+const mongo = require('mongodb');
 
 class HomeController extends Controller {
 
@@ -6,15 +7,34 @@ class HomeController extends Controller {
     await this.ctx.render('home.tpl', {});
   }
 
-  async list() {
-    this.ctx.body = {
-      ret: 0, data: [
-      ] };
+  async list(ctx) {
+
+    return this.app.mongooseDB.db.collection('project').find().toArray()
+      .then(data => {
+        ctx.body = {
+          ret: 0, data };
+      });
+
+
   }
 
   async create(ctx) {
-    ctx.logger.info('request data: %j', ctx.request.body);
-    ctx.body = { ret: 0 };
+    return this.app.mongooseDB.db.collection('project').insertOne({
+      name: ctx.request.body.name,
+      desc: ctx.request.body.desc,
+      admin: ctx.request.body.admin,
+      create_time: new Date() - 0,
+    }).then(() => {
+      ctx.body = { ret: 0 };
+    });
+  }
+
+  async deleteProject(ctx) {
+    return this.app.mongooseDB.db.collection('project').findOneAndDelete({
+      _id: mongo.ObjectID(ctx.request.body.id),
+    }).then(() => {
+      ctx.body = { ret: 0 };
+    });
   }
 }
 

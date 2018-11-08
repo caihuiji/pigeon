@@ -8,6 +8,7 @@ module.exports = app => {
 
   router.get('/home/list', controller.home.list);
   router.post('/home/create', controller.home.create);
+  router.post('/home/delete', controller.home.deleteProject);
   router.get('/detail', controller.detail.index);
 
   router.get('/detail/list', controller.detail.list);
