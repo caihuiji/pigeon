@@ -1,12 +1,12 @@
 <template>
     <div id="js-app">
-        <div class="operate-bar">
+        <div class="operate-bar" >
             <div style="position: relative;overflow: hidden;pointer:cur">
                 <a class="btn btn-default btn-sm btn-outline-primary">上传离线包 (*.zip) </a>
                 <input class="qui_btn ww_btn ww_fileInputWrap" v-on:change="handleFileChange" href="javascript:;" id="js_upload_file_input" type="file" name="file" value="上传文件"  style="position: absolute;height: 640%;width: 500%;top: 0;right: 0;filter: alpha(opacity=0);padding: 0;margin: 0;opacity: 0;cursor: pointer;">
             </div>
         </div>
-        <table class="table table-hover">
+        <table v-if="list.length" class="table table-hover">
             <thead>
             <tr >
                 <th style="width:80px;">#</th>
@@ -31,6 +31,11 @@
             </tr>
             </tbody>
         </table>
+        <div v-else>
+            <div style="text-align: center;padding-top:50px;">
+                尚未添加过离线包，请点击右上角上传离线包
+            </div>
+        </div>
 
     </div>
 </template>

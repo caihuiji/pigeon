@@ -1,9 +1,10 @@
 <template>
     <div id="js-app">
-        <div class="operate-bar">
+        <div class="operate-bar" v-if="list.length">
             <a class="btn btn-default btn-sm btn-outline-primary" href="javascript:;" v-on:click="showModalDialog" >添加</a>
         </div>
-        <table class="table table-hover">
+
+        <table v-if="list.length" class="table table-hover">
             <thead>
             <tr >
                 <th style="width:80px;">#</th>
@@ -27,6 +28,11 @@
             </tr>
             </tbody>
         </table>
+        <div v-else>
+            <div style="text-align: center;padding-top:50px;">
+                尚未添加过项目，请 <a class="" href="javascript:;" v-on:click="showModalDialog" >添加项目</a>
+            </div>
+        </div>
 
         <div :class="['modal','fade' ]"  id="js_createProjectModal" tabindex="-1">
             <div class="modal-dialog" role="document">
