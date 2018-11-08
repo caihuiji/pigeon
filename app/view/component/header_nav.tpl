@@ -1,6 +1,6 @@
 <div class="header-nav">
     <div class="header-title">
-        pigeon - 离线包发布系统
+        螺旋丸 - 离线包发布系统
     </div>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">

@@ -3,22 +3,21 @@ const path = require('path');
 const fs = require('fs');
 const awaitWriteStream = require('await-stream-ready').write;
 const sendToWormhole = require('stream-wormhole');
+const mongo = require('mongodb');
 
 class HomeController extends Controller {
 
-  async index() {
-    await this.ctx.render('detail.tpl', {});
+  async index(ctx) {
+    await this.ctx.render('detail.tpl', { refer_id: ctx.request.query.id });
   }
 
-  async list() {
-    this.ctx.body = {
-      ret: 0, data: [
-        /* { id: 1, create_time: new Date() - 0, update_time: new Date() - 0, version: 'sdfsdfsdf', status: 1 },
-        { id: 2, create_time: new Date() - 0, update_time: new Date() - 0, version: 'sdfsdfsdf', status: 2 },
-        { id: 3, create_time: new Date() - 0, update_time: new Date() - 0, version: 'sdfsdfsdf', status: 3 },
-        { id: 4, create_time: new Date() - 0, update_time: new Date() - 0, version: 'sdfsdfsdf', status: 4 },
-        { id: 5, create_time: new Date() - 0, update_time: new Date() - 0, version: 'sdfsdfsdf', status: 5 },*/
-      ] };
+  async list(ctx) {
+    return this.app.mongooseDB.db.collection('offline_package').find({ refer_id: ctx.request.query.refer_id }).toArray()
+      .then(data => {
+        ctx.body = {
+          ret: 0, data,
+        };
+      });
   }
 
   async create(ctx) {
@@ -38,12 +37,83 @@ class HomeController extends Controller {
     try {
       // 写入文件
       await awaitWriteStream(stream.pipe(writeStream));
+
+      const count = await this.app.mongooseDB.db.collection('offline_package').find().toArray().length || 0;
+
+      // ctx.body = { ret: 0 };
+      return this.app.mongooseDB.db.collection('offline_package').insertOne({
+        refer_id: stream.fields.refer_id,
+        version: (count + 1) * 5 + 100,
+        file_size: stream.fields.file_size || 0,
+        create_time: nowDate - 0,
+        status: 1,
+        update_time: nowDate - 0,
+      }).then(() => {
+        ctx.body = { ret: 0 };
+      });
+
     } catch (err) {
       // 必须将上传的文件流消费掉，要不然浏览器响应会卡死
       await sendToWormhole(stream);
       throw err;
     }
-    ctx.body = stream.fields;
+  }
+
+  async deletePackage(ctx) {
+    return this.app.mongooseDB.db.collection('offline_package').findOneAndDelete({
+      _id: mongo.ObjectID(ctx.request.body.id),
+    }).then(() => {
+      ctx.body = { ret: 0 };
+    });
+  }
+
+  async recallPackage(ctx) {
+    const findOne = await this.app.mongooseDB.db.collection('offline_package').findOne(
+      { _id: mongo.ObjectID(ctx.request.body.id) }
+    );
+
+    if (findOne) {
+      await this.app.mongooseDB.db.collection('offline_package').findOneAndUpdate(
+        { _id: mongo.ObjectID(ctx.request.body.id) },
+        { $set: { status: 5, random: 0 } }
+      );
+      ctx.body = { ret: 1 };
+    } else {
+      ctx.body = { ret: -30001 };
+    }
+  }
+
+
+  async testPublishPackage(ctx) {
+    const findOne = await this.app.mongooseDB.db.collection('offline_package').findOne(
+      { _id: mongo.ObjectID(ctx.request.body.id) }
+    );
+
+    if (findOne) {
+      await this.app.mongooseDB.db.collection('offline_package').findOneAndUpdate(
+        { _id: mongo.ObjectID(ctx.request.body.id) },
+        { $set: { status: 2 , random: 0 } }
+      );
+      ctx.body = { ret: 1 };
+    } else {
+      ctx.body = { ret: -30001 };
+    }
+  }
+
+  async publishPackage(ctx) {
+    const findOne = await this.app.mongooseDB.db.collection('offline_package').findOne(
+      { _id: mongo.ObjectID(ctx.request.body.id) }
+    );
+
+    if (findOne) {
+      await this.app.mongooseDB.db.collection('offline_package').findOneAndUpdate(
+        { _id: mongo.ObjectID(ctx.request.body.id) },
+        { $set: { status: ctx.request.body.random === 1 ? 4 : 3, random: ctx.request.body.random || 0 } }
+      );
+      ctx.body = { ret: 1 };
+    } else {
+      ctx.body = { ret: -30001 };
+    }
   }
 }
 

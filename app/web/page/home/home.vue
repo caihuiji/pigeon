@@ -174,10 +174,13 @@
             },
 
             deleteProject (event){
-                return axios.post('/home/delete' , {id : event.target.getAttribute('data-id') })
-                    .then(data => {
-                        this.fetchData();
-                    })
+                if (confirm("确定删除这个项目吗？里面已发布的离线包就会丢失")) {
+                    return axios.post('/home/delete' , {id : event.target.getAttribute('data-id') })
+                        .then(data => {
+                            this.fetchData();
+                        })
+                }
+
             }
 
         }

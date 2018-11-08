@@ -21,6 +21,10 @@
     </div>
 </div>
 
+<script>
+    var refer_id = '{{ refer_id }}';
+</script>
+
 <script src="/public/js/detail-build.js"></script>
 </body>
 </html>

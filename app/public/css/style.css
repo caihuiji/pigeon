@@ -56,3 +56,7 @@ a:hover {
     position: relative;
 }
 
+.operate-td a {
+    display: inline-block;
+    padding:0 5px;
+}

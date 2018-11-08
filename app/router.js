@@ -13,4 +13,11 @@ module.exports = app => {
 
   router.get('/detail/list', controller.detail.list);
   router.post('/detail/create', controller.detail.create);
+
+  router.post('/detail/deletePackage', controller.detail.deletePackage);
+  router.post('/detail/testPublishPackage', controller.detail.testPublishPackage);
+  router.post('/detail/publishPackage', controller.detail.publishPackage);
+  router.post('/detail/recallPackage', controller.detail.recallPackage);
+
+
 };

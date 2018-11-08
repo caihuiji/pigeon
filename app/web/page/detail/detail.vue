@@ -9,11 +9,11 @@
         <table v-if="list.length" class="table table-hover">
             <thead>
             <tr >
-                <th style="width:80px;">#</th>
-                <th style="width:300px;">离线包-version</th>
-                <th style="width:280px;">创建时间</th>
-                <th style="width:280px;">变更时间</th>
-                <th style="width:120px;">状态</th>
+                <th style="width:50px;">#</th>
+                <th style="width:200px;">离线包-version</th>
+                <th style="width:200px;">创建时间</th>
+                <th style="width:200px;">变更时间</th>
+                <th style="width:200px;">状态</th>
                 <th >操作</th>
             </tr>
             </thead>
@@ -24,9 +24,26 @@
                 <td>{{item.create_time | formatDate('yyyy-MM-dd')}}</td>
                 <td>{{item.update_time | formatDate('yyyy-MM-dd')}}</td>
                 <td>
-                    {{item.status}}
+                    <span v-if="item.status == 2">测试发布中</span>
+                    <span v-else-if="item.status == 3"> 灰度发布中</span>
+                    <span v-else-if="item.status == 4">已发布</span>
+                    <span v-else-if="item.status == 5">撤回</span>
+                    <span v-else >未发布</span>
                 </td>
-                <td></td>
+                <td class="operate-td">
+                    <span v-if="item.status == 2">
+                        <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">灰度发布</a>| <a @click="deletePackage" :data-id="item._id" href="javascript:;">撤回</a>
+                    </span>
+                    <span v-else-if="item.status == 3">
+                           <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">继续灰度发布</a> | <a @click="publishPackage" :data-id="item._id" href="javascript:;">正式发布</a> | <a @click="recallPackage"  :data-id="item._id" href="javascript:;">撤回</a>
+                    </span>
+                    <span v-else-if="item.status == 4">
+                          <a @click="recallPackage" :data-id="item._id" href="javascript:;">撤回</a>
+                    </span>
+                    <span v-else >
+                         <a @click="testPublishPackage" :data-id="item._id" href="javascript:;">测试发布</a> | <a @click="deletePackage" :data-id="item._id" href="javascript:;">删除</a>
+                    </span>
+                </td>
 
             </tr>
             </tbody>
@@ -57,7 +74,7 @@
         },
         methods: {
             async fetchData() {
-                return axios.get('/detail/list')
+                return axios.get('/detail/list?refer_id=' + window.refer_id )
                     .then(data => {
                         const list = data.data.data;
                         this.list = list;
@@ -68,6 +85,8 @@
                 let formData = new FormData();
                 formData.append('name', file.name);
                 formData.append('file', file);
+                formData.append('refer_id', window.refer_id);
+                formData.append('file_size', file.size);
 
                 let config = {
                     headers: {
@@ -77,8 +96,7 @@
 
                 return axios.post('/detail/create', formData , config)
                     .then(data => {
-                        const list = data.data.data;
-                        this.list = list;
+                        this.fetchData();
                     })
 
             },
@@ -101,6 +119,38 @@
                     .then(()=> {
                         clearFileValue();
                     })
+            },
+            grayPublishPackage (event){
+                return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : 0.1 })
+                    .then(data => {
+                        this.fetchData();
+                    })
+            },
+            publishPackage (event){
+                return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
+                    .then(data => {
+                        this.fetchData();
+                    })
+            },
+            recallPackage(event){
+                return axios.post('/detail/recallPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
+                    .then(data => {
+                        this.fetchData();
+                    })
+            },
+            testPublishPackage(event){
+                return axios.post('/detail/testPublishPackage' , {id : event.target.getAttribute('data-id')  })
+                    .then(data => {
+                        this.fetchData();
+                    })
+            },
+            deletePackage(event){
+                if (confirm("确定删除这个离线包吗？")) {
+                    return axios.post('/detail/deletePackage' , {id : event.target.getAttribute('data-id') })
+                        .then(data => {
+                            this.fetchData();
+                        })
+                }
             }
         }
     }
