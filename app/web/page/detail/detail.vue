@@ -60,6 +60,7 @@
 <script>
 
     import axios from 'axios';
+    import dialog from './../../component/dialog.js'
 
     export default {
         name: 'js-app',
@@ -145,12 +146,21 @@
                     })
             },
             deletePackage(event){
-                if (confirm("确定删除这个离线包吗？")) {
+              var self = this;
+              dialog({
+                type : "confirm",
+                title : "提示",
+                text : "确定删除这个离线包吗？",
+                callback (confirm){
+                  if(confirm){
                     return axios.post('/detail/deletePackage' , {id : event.target.getAttribute('data-id') })
-                        .then(data => {
-                            this.fetchData();
-                        })
+                      .then(data => {
+                        self.fetchData();
+                      })
+                  }
                 }
+              });
+
             }
         }
     }

@@ -1,12 +1,12 @@
 koa 为什么 cxt.render 要用 await
 
-async、await ? 跟es6 yield * function 有什么区别
+async、await ? 跟es6 yield * function 有什么区别 ， 抛异常
 
 vue2 vs vue3
 
 babel presets?
 
-export default
+export default  export {}
 
 
 polyfill 做什么？
@@ -14,3 +14,7 @@ polyfill 做什么？
 dialog show hide 更优雅的方式
 
 设置 has-error 更优雅的方式
+
+组件 vue.component vue.use $alert
+
+vue.extend vue.component vue.use vue.watch

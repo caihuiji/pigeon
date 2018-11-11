@@ -34,6 +34,7 @@
             </div>
         </div>
 
+
         <div :class="['modal','fade' ]"  id="js_createProjectModal" tabindex="-1">
             <div class="modal-dialog" role="document">
                 <form @submit.prevent="addProject">
@@ -76,6 +77,8 @@
 <script>
 
     import axios from 'axios';
+    import dialog from './../../component/dialog.js'
+
 
     export default {
         name: 'js-app',
@@ -89,7 +92,8 @@
                   name : '',
                   desc : '',
                   admin : ''
-              }
+              },
+              dialogOption: {},
             }
         },
 
@@ -129,7 +133,7 @@
                 setTimeout( () => {
                     dialog.classList.add('in');
                     modal.classList.add('in');
-                },300)
+                },100)
             },
 
             closeModalDialog (){
@@ -174,14 +178,22 @@
             },
 
             deleteProject (event){
-                if (confirm("确定删除这个项目吗？里面已发布的离线包就会丢失")) {
+              var self = this;
+              dialog({
+                type : "confirm",
+                title : "提示",
+                text : "确认要删除这个项目吗？其下的离线包也会全部删除！！",
+                callback (confirm){
+                  if(confirm){
                     return axios.post('/home/delete' , {id : event.target.getAttribute('data-id') })
-                        .then(data => {
-                            this.fetchData();
-                        })
+                      .then(data => {
+                        self.fetchData();
+                      })
+                  }
                 }
+              });
+            },
 
-            }
 
         }
     }
