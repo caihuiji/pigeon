@@ -120,7 +120,7 @@
             showModalDialog (){
                 this.project.name = "";
                 this.project.desc = "";
-                this.project.admin = "";
+                this.project.admin = window.userName + ';';
                 this.nameErr = false;
                 this.descErr = false;
                 this.adminErr = false;

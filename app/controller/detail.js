@@ -9,8 +9,7 @@ const unzip = require('unzip');
 const archiver = require('archiver');
 
 
-
-const appendVersionFile = async (filePath, versionFileStr , ctx) => {
+const appendVersionFile = async (filePath, versionFileStr, ctx) => {
   const archive = archiver('zip');
   ctx.logger.info('unzip file :' + filePath);
   const folderPath = filePath.replace('.zip', '/');
@@ -55,7 +54,7 @@ const appendVersionFile = async (filePath, versionFileStr , ctx) => {
 class DetailController extends Controller {
 
   async index(ctx) {
-    await this.ctx.render('detail.tpl', { refer_id: ctx.request.query.id });
+    await this.ctx.render('detail.tpl', { refer_id: ctx.request.query.id, userInfo: ctx.session || {} });
   }
 
   async list(ctx) {
@@ -74,7 +73,7 @@ class DetailController extends Controller {
 
     const nowDate = new Date();
     const dirName = nowDate.getFullYear() + '' + (nowDate.getMonth() + 1);
-    const filename = stream.fields.refer_id + '_' + Date.now() + path.extname(stream.filename);
+    const filename = Date.now() + '_' + Math.round(Math.random() * 10000) + path.extname(stream.filename);
 
     const targetFolderPath = path.join(this.config.baseDir, uplaodBasePath, dirName);
     if (!fs.existsSync(targetFolderPath)) fs.mkdirSync(targetFolderPath);
@@ -89,7 +88,7 @@ class DetailController extends Controller {
       const count = await this.app.mongooseDB.db.collection('package').find().toArray().length || 0;
       const version = (count + 1) * 5 + 100;
 
-      const appendResult = await appendVersionFile(targetPath, { version, create_time: nowDate - 0 } , ctx);
+      const appendResult = await appendVersionFile(targetPath, { version, create_time: nowDate - 0 }, ctx);
 
       if (!appendResult.filepath) {
         ctx.body = { ret: -2 };
@@ -100,6 +99,7 @@ class DetailController extends Controller {
       return this.app.mongooseDB.db.collection('package').insertOne({
         refer_id: stream.fields.refer_id,
         version: (count + 1) * 5 + 100,
+        cdn_url: appendResult.filepath,
         file_size: stream.fields.file_size || 0,
         create_time: nowDate - 0,
         status: 1,

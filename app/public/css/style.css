@@ -34,6 +34,26 @@ a:hover {
     height: 30px;
 }
 
+.login-wrap {
+    line-height: 18px;
+    margin: 0 auto;
+}
+
+.login {
+    color: #b4b5b8;
+    float: right;
+    margin-top: 6px;
+    line-height: 18px;
+}
+
+.login img {
+    float: left;
+    margin-right: 5px;
+    vertical-align: middle;
+    width: 18px;
+    height: 18px;
+}
+
 .breadcrumb {
     padding-left: 0;
     padding-right: 0;

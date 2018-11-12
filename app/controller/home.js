@@ -3,8 +3,8 @@ const mongo = require('mongodb');
 
 class HomeController extends Controller {
 
-  async index() {
-    await this.ctx.render('home.tpl', {});
+  async index(ctx) {
+    await this.ctx.render('home.tpl', { userInfo: ctx.session || {}  });
   }
 
   async list(ctx) {

@@ -23,6 +23,7 @@
 
 <script>
     var refer_id = '{{ refer_id }}';
+    var userName = '{{ userInfo.loginname }}';
 </script>
 
 <script src="/public/js/detail-build.js"></script>

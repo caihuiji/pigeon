@@ -20,6 +20,9 @@
     </div>
 </div>
 
+<script>
+    var userName = '{{ userInfo.loginname }}';
+</script>
 <script src="/public/js/main-build.js"></script>
 </body>
 </html>
