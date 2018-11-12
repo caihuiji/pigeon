@@ -84,9 +84,9 @@ class DetailController extends Controller {
       // 写入文件
       await awaitWriteStream(stream.pipe(writeStream));
 
+      this.ctx.logger.info(mongo.ObjectID(stream.fields.refer_id));
 
-      const count = await this.app.mongooseDB.db.collection('package').find().toArray().length || 0;
-      const version = (count + 1) * 5 + 100;
+      const version = (stream.fields.refer_id || '').substr(-5) + (nowDate - 0);
 
       const appendResult = await appendVersionFile(targetPath, { version, create_time: nowDate - 0 }, ctx);
 
@@ -98,7 +98,7 @@ class DetailController extends Controller {
       // ctx.body = { ret: 0 };
       return this.app.mongooseDB.db.collection('package').insertOne({
         refer_id: stream.fields.refer_id,
-        version: (count + 1) * 5 + 100,
+        version,
         cdn_url: appendResult.filepath,
         file_size: stream.fields.file_size || 0,
         create_time: nowDate - 0,

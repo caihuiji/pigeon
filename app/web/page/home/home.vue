@@ -23,7 +23,7 @@
                 <td>{{item.admin}}</td>
                 <td>{{item.create_time | formatDate('yyyy-MM-dd') }}  </td>
                 <td>
-                    <a :href="'/detail?id=' + item._id">查看</a> | <a href="javascript:;">编辑</a> | <a @click="deleteProject" :data-id="item._id" href="javascript:;">删除</a>
+                    <a :href="'/detail?id=' + item._id">查看</a> | <a @click="showEditModalDialog(item._id)" href="javascript:;">编辑</a> | <a @click="deleteProject" :data-id="item._id" href="javascript:;">删除</a>
                 </td>
             </tr>
             </tbody>
@@ -65,6 +65,7 @@
                             <input  class="btn btn-primary" type="submit"  value="添加">
                         </div>
                     </div>
+                    <input type="hidden"  v-model="project.id || ''" >
                 </form>
             </div>
         </div>
@@ -91,7 +92,8 @@
               project : {
                   name : '',
                   desc : '',
-                  admin : ''
+                  admin : '',
+                  id : null,
               },
               dialogOption: {},
             }
@@ -110,7 +112,7 @@
             },
 
             async saveData(formData) {
-                return axios.post('/home/create' , formData)
+                return axios.post('/home/save' , formData)
                     .then(data => {
                         this.closeModalDialog();
                         this.fetchData();
@@ -120,6 +122,7 @@
             showModalDialog (){
                 this.project.name = "";
                 this.project.desc = "";
+                this.project.id = null;
                 this.project.admin = window.userName + ';';
                 this.nameErr = false;
                 this.descErr = false;
@@ -134,6 +137,38 @@
                     dialog.classList.add('in');
                     modal.classList.add('in');
                 },100)
+            },
+
+            showEditModalDialog (itemId){
+              var matchItem ;
+              (this.list || []).forEach((item)=>{
+                if(item._id == itemId){
+                    matchItem = item;
+                }
+              });
+
+              if(!matchItem){
+                return;
+              }
+
+              this.project.name = matchItem.name;
+              this.project.desc = matchItem.desc;
+              this.project.admin = matchItem.admin;
+              this.project.id = matchItem._id;
+
+              this.nameErr = false;
+              this.descErr = false;
+              this.adminErr = false;
+
+              document.body.classList.add('modal-open');
+              let dialog = document.querySelector('#js_createProjectModal');
+              let modal = document.querySelector('#js_modal')
+              dialog.style.display = "block";
+              modal.style.display = "block";
+              setTimeout( () => {
+                dialog.classList.add('in');
+                modal.classList.add('in');
+              },100)
             },
 
             closeModalDialog (){

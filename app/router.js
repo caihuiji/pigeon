@@ -7,7 +7,7 @@ module.exports = app => {
   router.get('/', controller.home.index);
 
   router.get('/home/list', controller.home.list);
-  router.post('/home/create', controller.home.create);
+  router.post('/home/save', controller.home.save);
   router.post('/home/delete', controller.home.deleteProject);
   router.get('/detail', controller.detail.index);
 

@@ -35,7 +35,7 @@
                         <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">灰度发布</a>| <a @click="deletePackage" :data-id="item._id" href="javascript:;">撤回</a>
                     </span>
                     <span v-else-if="item.status == 3">
-                           <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">继续灰度发布</a> | <a @click="publishPackage" :data-id="item._id" href="javascript:;">正式发布</a> | <a @click="recallPackage"  :data-id="item._id" href="javascript:;">撤回</a>
+                           <a @click="grayPublishPackage($event, item.random)" :data-id="item._id" href="javascript:;">继续灰度发布</a> | <a @click="publishPackage" :data-id="item._id" href="javascript:;">正式发布</a> | <a @click="recallPackage"  :data-id="item._id" href="javascript:;">撤回</a>
                     </span>
                     <span v-else-if="item.status == 4">
                           <a @click="recallPackage" :data-id="item._id" href="javascript:;">撤回</a>
@@ -61,6 +61,7 @@
 
     import axios from 'axios';
     import dialog from './../../component/dialog.js'
+    import grayRandom from './../../component/grayRandom.js'
 
     export default {
         name: 'js-app',
@@ -121,29 +122,69 @@
                         clearFileValue();
                     })
             },
-            grayPublishPackage (event){
-                return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : 0.1 })
-                    .then(data => {
-                        this.fetchData();
-                    })
+            grayPublishPackage (event , random){
+              var self = this;
+              grayRandom({
+                random : random,
+                callback (confirm , random){
+                  if(confirm){
+                    return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : random })
+                      .then(data => {
+                        self.fetchData();
+                      })
+                  }
+                }
+              });
+
             },
             publishPackage (event){
-                return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
-                    .then(data => {
-                        this.fetchData();
-                    })
+              var self = this;
+              dialog({
+                type : "confirm",
+                title : "正式发布",
+                text : "确定要正式发布离线包吗？",
+                callback (confirm){
+                  if(confirm){
+                    return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
+                      .then(data => {
+                        self.fetchData();
+                      })
+                  }
+                }
+              });
             },
             recallPackage(event){
-                return axios.post('/detail/recallPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
-                    .then(data => {
-                        this.fetchData();
-                    })
+              var self = this;
+              dialog({
+                type : "confirm",
+                title : "撤回",
+                text : "确定要撤回离线包吗？",
+                callback (confirm){
+                  if(confirm){
+                    return axios.post('/detail/recallPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
+                      .then(data => {
+                        self.fetchData();
+                      })
+                  }
+                }
+              });
             },
             testPublishPackage(event){
-                return axios.post('/detail/testPublishPackage' , {id : event.target.getAttribute('data-id')  })
-                    .then(data => {
-                        this.fetchData();
-                    })
+              var self = this;
+              dialog({
+                type : "confirm",
+                title : "测试发布",
+                text : "确定要测试发布离线包吗？",
+                callback (confirm){
+                  if(confirm){
+                    return axios.post('/detail/testPublishPackage' , {id : event.target.getAttribute('data-id')  })
+                      .then(data => {
+                        self.fetchData();
+                      })
+                  }
+                }
+              });
+
             },
             deletePackage(event){
               var self = this;

@@ -4,7 +4,7 @@ const mongo = require('mongodb');
 class HomeController extends Controller {
 
   async index(ctx) {
-    await this.ctx.render('home.tpl', { userInfo: ctx.session || {}  });
+    await this.ctx.render('home.tpl', { userInfo: ctx.session || {} });
   }
 
   async list(ctx) {
@@ -18,7 +18,21 @@ class HomeController extends Controller {
 
   }
 
-  async create(ctx) {
+  async save(ctx) {
+    if (ctx.request.body.id) {
+      return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+        {
+          _id: mongo.ObjectID(ctx.request.body.id),
+        }, {
+          $set: {
+            name: ctx.request.body.name,
+            desc: ctx.request.body.desc,
+            admin: ctx.request.body.admin,
+          } }
+      ).then(() => {
+        ctx.body = { ret: 0 };
+      });
+    }
     return this.app.mongooseDB.db.collection('project').insertOne({
       name: ctx.request.body.name,
       desc: ctx.request.body.desc,
@@ -27,6 +41,8 @@ class HomeController extends Controller {
     }).then(() => {
       ctx.body = { ret: 0 };
     });
+
+
   }
 
   async deleteProject(ctx) {
