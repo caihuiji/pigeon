@@ -51,6 +51,41 @@ const appendVersionFile = async (filePath, versionFileStr, ctx) => {
 
 };
 
+
+const publishToFetchSvr = async function(refer_id, ctx) {
+  if (!refer_id) {
+    return {};
+  }
+
+
+  let testOne = await this.app.mongooseDB.db.collection('package').findOne(
+    { refer_id, status: 2 }
+  );
+
+  let grayOne = await this.app.mongooseDB.db.collection('package').findOne(
+    { refer_id, status: 3 }
+  );
+
+  let publishedOne = await this.app.mongooseDB.db.collection('package').find(
+    { refer_id, status: 4 }
+  ).sort({ update_time: -1 })
+    .toArray();
+
+
+  testOne = testOne || {};
+  grayOne = grayOne || {};
+  publishedOne = publishedOne && publishedOne.length ? publishedOne[0] : {};
+
+  const syncJson = {
+    offid: ctx.request.query.refer_id,
+    test: { version: testOne.version || 0, url: testOne.cdn_url || '' },
+    gray: { version: grayOne.version || 0, url: grayOne.cdn_ur || '', random: grayOne.random || 0 },
+    official: { version: publishedOne.version || 0, url: publishedOne.cdn_url },
+  };
+
+  ctx.logger.info('sync info :', syncJson);
+};
+
 class DetailController extends Controller {
 
   async index(ctx) {
@@ -60,6 +95,15 @@ class DetailController extends Controller {
   async list(ctx) {
     return this.app.mongooseDB.db.collection('package').find({ refer_id: ctx.request.query.refer_id }).toArray()
       .then(data => {
+        return this.app.mongooseDB.db.collection('project').findOne(
+          {
+            _id: mongo.ObjectID(ctx.request.query.refer_id),
+          }).then(function(findOne) {
+          return { list: data, current_version: findOne.current_version };
+        });
+      })
+      .then(data => {
+
         ctx.body = {
           ret: 0, data,
         };
@@ -105,6 +149,8 @@ class DetailController extends Controller {
         status: 1,
         update_time: nowDate - 0,
       }).then(() => {
+
+
         ctx.body = { ret: 0 };
       });
 
@@ -118,12 +164,24 @@ class DetailController extends Controller {
   async deletePackage(ctx) {
     return this.app.mongooseDB.db.collection('package').findOneAndDelete({
       _id: mongo.ObjectID(ctx.request.body.id),
-    }).then(() => {
-      ctx.body = { ret: 0 };
-    });
+    })
+      .then(data => {
+        return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+          {
+            _id: mongo.ObjectID(data.value.refer_id),
+          }, {
+            $set: {
+              current_version: 0,
+            } }
+        );
+      })
+      .then(() => {
+        ctx.body = { ret: 0 };
+      });
   }
 
   async recallPackage(ctx) {
+    let refer_id;
     const findOne = await this.app.mongooseDB.db.collection('package').findOne(
       { _id: mongo.ObjectID(ctx.request.body.id) }
     );
@@ -131,9 +189,22 @@ class DetailController extends Controller {
     if (findOne) {
       await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
         { _id: mongo.ObjectID(ctx.request.body.id) },
-        { $set: { status: 5, random: 0 } }
-      );
+        { $set: { status: 5, random: 0, update_time: new Date() - 0 } }
+      ).then(data => {
+
+        refer_id = data.value.refer_id;
+        return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+          {
+            _id: mongo.ObjectID(data.value.refer_id),
+          }, {
+            $set: {
+              current_version: 0,
+            } }
+        );
+      });
       ctx.body = { ret: 1 };
+
+      publishToFetchSvr.apply(this, [ refer_id, ctx ]);
     } else {
       ctx.body = { ret: -30001 };
     }
@@ -141,6 +212,7 @@ class DetailController extends Controller {
 
 
   async testPublishPackage(ctx) {
+    let refer_id;
     const findOne = await this.app.mongooseDB.db.collection('package').findOne(
       { _id: mongo.ObjectID(ctx.request.body.id) }
     );
@@ -148,8 +220,21 @@ class DetailController extends Controller {
     if (findOne) {
       await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
         { _id: mongo.ObjectID(ctx.request.body.id) },
-        { $set: { status: 2, random: 0 } }
-      );
+        { $set: { status: 2, random: 0, update_time: new Date() - 0 } }
+      ).then(data => {
+        refer_id = data.value.refer_id;
+        return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+          {
+            _id: mongo.ObjectID(data.value.refer_id),
+          }, {
+            $set: {
+              current_version: data.value.version,
+            } }
+        );
+      });
+
+      publishToFetchSvr.apply(this, [ refer_id, ctx ]);
+
       ctx.body = { ret: 1 };
     } else {
       ctx.body = { ret: -30001 };
@@ -157,6 +242,7 @@ class DetailController extends Controller {
   }
 
   async publishPackage(ctx) {
+    let refer_id;
     const findOne = await this.app.mongooseDB.db.collection('package').findOne(
       { _id: mongo.ObjectID(ctx.request.body.id) }
     );
@@ -164,9 +250,26 @@ class DetailController extends Controller {
     if (findOne) {
       await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
         { _id: mongo.ObjectID(ctx.request.body.id) },
-        { $set: { status: ctx.request.body.random === 1 ? 4 : 3, random: ctx.request.body.random || 0 } }
-      );
+        { $set: { status: ctx.request.body.random === 1 ? 4 : 3, random: ctx.request.body.random || 0, update_time: new Date() - 0 } }
+      ).then(data => {
+        refer_id = data.value.refer_id;
+        if (ctx.request.body.random === 1) {
+          return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+            {
+              _id: mongo.ObjectID(data.value.refer_id),
+            }, {
+              $set: {
+                current_version: 0,
+              } }
+          );
+        }
+        return {};
+
+      });
+
       ctx.body = { ret: 1 };
+
+      publishToFetchSvr.apply(this, [ refer_id, ctx ]);
     } else {
       ctx.body = { ret: -30001 };
     }

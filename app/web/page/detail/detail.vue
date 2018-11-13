@@ -21,8 +21,8 @@
             <tr v-for="(item,index) in list">
                 <td>{{index+1}}</td>
                 <td>{{item.version}}</td>
-                <td>{{item.create_time | formatDate('yyyy-MM-dd')}}</td>
-                <td>{{item.update_time | formatDate('yyyy-MM-dd')}}</td>
+                <td>{{item.create_time | formatDate('yyyy-MM-dd hh:mm')}}</td>
+                <td>{{item.update_time | formatDate('yyyy-MM-dd hh:mm')}}</td>
                 <td>
                     <span v-if="item.status == 2">测试发布中</span>
                     <span v-else-if="item.status == 3"> 灰度发布中</span>
@@ -31,7 +31,10 @@
                     <span v-else >未发布</span>
                 </td>
                 <td class="operate-td">
-                    <span v-if="item.status == 2">
+                    <span v-if=" current_version!= 0 && item.version != current_version" style="color: #8d8d8d;">
+                        &nbsp;version：{{current_version}} 发布中
+                    </span>
+                    <span v-else-if="item.status == 2">
                         <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">灰度发布</a>| <a @click="deletePackage" :data-id="item._id" href="javascript:;">撤回</a>
                     </span>
                     <span v-else-if="item.status == 3">
@@ -67,7 +70,8 @@
         name: 'js-app',
         data () {
             return {
-                list : []
+                list : [],
+                current_version : 0
             }
         },
 
@@ -78,7 +82,8 @@
             async fetchData() {
                 return axios.get('/detail/list?refer_id=' + window.refer_id )
                     .then(data => {
-                        const list = data.data.data;
+                        const list = data.data.data.list;
+                        this.current_version = data.data.data.current_version;
                         this.list = list;
                     })
             },
