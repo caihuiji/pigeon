@@ -7,6 +7,7 @@ const sendToWormhole = require('stream-wormhole');
 const mongo = require('mongodb');
 const unzip = require('unzip');
 const archiver = require('archiver');
+const request = require('request');
 
 
 const appendVersionFile = async (filePath, versionFileStr, ctx) => {
@@ -51,6 +52,38 @@ const appendVersionFile = async (filePath, versionFileStr, ctx) => {
 
 };
 
+const publishToCdn = function(filePath, loginname, ctx) {
+  ctx.logger.info('should publish filepath : ', filePath);
+  return new Promise(function(resolve, reject) {
+    request.post({
+      url: 'http://ops.itil.rdgz.org/change_mgr/cgi-bin/cdn_upload_cgi',
+      method: 'POST',
+      json: true,
+      timeout: 10000, // 10s
+      formData: {
+        file_data: fs.createReadStream(filePath),
+        action: 'upload_file',
+        product: '2',
+        path: '/home/qspace/QQMail/nodejslogic/htdocs/wework/offline_package',
+      },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
+        cookie: `account=${loginname}`,
+      },
+    }, function(err, res, body) {
+      if (err) {
+        ctx.logger.error('upload failed:', err);
+        reject({ error_code: -1 });
+      } else if (body.header.error_code !== 0) {
+        reject({ error_code: body.header.error_code });
+      } else {
+        resolve(body);
+      }
+    });
+  });
+
+};
+
 
 const publishToFetchSvr = async function(refer_id, ctx) {
   if (!refer_id) {
@@ -77,13 +110,38 @@ const publishToFetchSvr = async function(refer_id, ctx) {
   publishedOne = publishedOne && publishedOne.length ? publishedOne[0] : {};
 
   const syncJson = {
-    offid: ctx.request.query.refer_id,
+    offid: refer_id,
     test: { version: testOne.version || 0, url: testOne.cdn_url || '' },
-    gray: { version: grayOne.version || 0, url: grayOne.cdn_ur || '', random: grayOne.random || 0 },
+    gray: { version: grayOne.version || 0, url: grayOne.cdn_url || '', random: grayOne.random || 0 },
     official: { version: publishedOne.version || 0, url: publishedOne.cdn_url },
   };
 
   ctx.logger.info('sync info :', syncJson);
+
+  return new Promise((resolve, reject) => {
+    request.post({
+      url: 'http://127.0.0.1:13082/wework_admin/offline_sync',
+      method: 'POST',
+      json: true,
+      timeout: 10000, // 10s
+      form: {
+        data: syncJson,
+      },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
+        'Content-type': 'application/x-www-form-urlencoded',
+        origin: 'https://work.weixin.qq.com',
+        referer: 'https://work.weixin.qq.com',
+      },
+    }, function(err, res, body) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+
 };
 
 class DetailController extends Controller {
@@ -134,8 +192,17 @@ class DetailController extends Controller {
 
       const appendResult = await appendVersionFile(targetPath, { version, create_time: nowDate - 0 }, ctx);
 
+
       if (!appendResult.filepath) {
         ctx.body = { ret: -2 };
+        return;
+      }
+
+      const loginname = ctx.session && ctx.session.loginname ? ctx.session.loginname : 'chriscai';
+      const publishResult = await publishToCdn(appendResult.filepath, loginname, this.ctx);
+
+      if (!publishResult.data) {
+        ctx.body = { ret: -401 };
         return;
       }
 
@@ -143,7 +210,7 @@ class DetailController extends Controller {
       return this.app.mongooseDB.db.collection('package').insertOne({
         refer_id: stream.fields.refer_id,
         version,
-        cdn_url: appendResult.filepath,
+        cdn_url: publishResult.data,
         file_size: stream.fields.file_size || 0,
         create_time: nowDate - 0,
         status: 1,

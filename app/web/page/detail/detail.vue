@@ -31,20 +31,20 @@
                     <span v-else >未发布</span>
                 </td>
                 <td class="operate-td">
-                    <span v-if=" current_version!= 0 && item.version != current_version" style="color: #8d8d8d;">
+                    <span v-if=" current_version && current_version!= 0 && item.version != current_version" style="color: #8d8d8d;">
                         &nbsp;version：{{current_version}} 发布中
                     </span>
                     <span v-else-if="item.status == 2">
-                        <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">灰度发布</a>| <a @click="deletePackage" :data-id="item._id" href="javascript:;">撤回</a>
+                        <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">灰度发布</a>| <a @click="deletePackage" :data-id="item._id" href="javascript:;">撤回</a> | <a :href="item.cdn_url">下载</a>
                     </span>
                     <span v-else-if="item.status == 3">
-                           <a @click="grayPublishPackage($event, item.random)" :data-id="item._id" href="javascript:;">继续灰度发布</a> | <a @click="publishPackage" :data-id="item._id" href="javascript:;">正式发布</a> | <a @click="recallPackage"  :data-id="item._id" href="javascript:;">撤回</a>
+                           <a @click="grayPublishPackage($event, item.random)" :data-id="item._id" href="javascript:;">继续灰度发布</a> | <a @click="publishPackage" :data-id="item._id" href="javascript:;">正式发布</a> | <a @click="recallPackage"  :data-id="item._id" href="javascript:;">撤回</a> | <a :href="item.cdn_url">下载</a>
                     </span>
                     <span v-else-if="item.status == 4">
-                          <a @click="recallPackage" :data-id="item._id" href="javascript:;">撤回</a>
+                          <a @click="recallPackage" :data-id="item._id" href="javascript:;">撤回</a> | <a :href="item.cdn_url">下载</a>
                     </span>
                     <span v-else >
-                         <a @click="testPublishPackage" :data-id="item._id" href="javascript:;">测试发布</a> | <a @click="deletePackage" :data-id="item._id" href="javascript:;">删除</a>
+                         <a @click="testPublishPackage" :data-id="item._id" href="javascript:;">测试发布</a> | <a @click="deletePackage" :data-id="item._id" href="javascript:;">删除</a> |<a :href="item.cdn_url">下载</a>
                     </span>
                 </td>
 
@@ -104,6 +104,14 @@
                 return axios.post('/detail/create', formData , config)
                     .then(data => {
                         this.fetchData();
+                    }).catch((e)=>{
+                        dialog({
+                            type : "alert",
+                            title : "提示",
+                            text : "上传失败，请重试！",
+                            callback (confirm){
+                            }
+                        });
                     })
 
             },
