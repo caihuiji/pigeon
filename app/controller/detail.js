@@ -13,9 +13,20 @@ const request = require('request');
 const appendVersionFile = async (filePath, versionFileStr, ctx) => {
   const archive = archiver('zip');
   ctx.logger.info('unzip file :' + filePath);
-  const folderPath = filePath.replace('.zip', '/');
-  await fs.createReadStream(filePath).pipe(unzip.Extract({ path: folderPath }));
-  await awaitReadStream(fs.createReadStream(filePath).pipe(unzip.Parse()));
+  const folderPath = path.join(filePath.replace('.zip', ''), '/');
+
+  const unzipPromise = new Promise((resolve, reject) => {
+    const unzipParser = unzip.Extract({ path: folderPath });
+    fs.createReadStream(filePath).pipe(unzipParser);
+    unzipParser.on('error', function(err) {
+      reject(err);
+    });
+    unzipParser.on('close', function() {
+      resolve({});
+    });
+  });
+
+  await unzipPromise;
 
   const versionWrite = fs.createWriteStream(path.join(folderPath, 'config.json'));
   versionWrite.write(JSON.stringify(versionFileStr));
@@ -30,13 +41,15 @@ const appendVersionFile = async (filePath, versionFileStr, ctx) => {
     });
   });
 
+
   await versionWritePromise;
 
   const verPath = filePath.replace('.zip', '_ver.zip');
   ctx.logger.info('archive file :' + verPath);
+  ctx.logger.info('archive folder :' + folderPath);
   const zipStream = fs.createWriteStream(verPath);
   archive.pipe(zipStream);
-  archive.directory(folderPath);
+  archive.directory(folderPath, false);
   archive.finalize();
 
   const zipWritePromise = new Promise((resolve, reject) => {
@@ -111,16 +124,17 @@ const publishToFetchSvr = async function(refer_id, ctx) {
 
   const syncJson = {
     offid: refer_id,
-    test: { version: testOne.version || 0, url: testOne.cdn_url || '' },
-    gray: { version: grayOne.version || 0, url: grayOne.cdn_url || '', random: grayOne.random || 0 },
-    official: { version: publishedOne.version || 0, url: publishedOne.cdn_url },
+    test: { version: testOne.version || '', url: testOne.cdn_url || '' },
+    gray: { version: grayOne.version || '', url: grayOne.cdn_url || '', random: grayOne.random || 0 },
+    official: { version: publishedOne.version || '', url: publishedOne.cdn_url },
   };
 
   ctx.logger.info('sync info :', syncJson);
 
   return new Promise((resolve, reject) => {
     request.post({
-      url: 'http://127.0.0.1:13082/wework_admin/offline_sync',
+      url: 'http://100.115.130.244:13082/wework_admin/offline_sync',
+
       method: 'POST',
       json: true,
       timeout: 10000, // 10s
@@ -128,6 +142,7 @@ const publishToFetchSvr = async function(refer_id, ctx) {
         data: syncJson,
       },
       headers: {
+        Host: 'work.weixin.qq.com',
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
         'Content-type': 'application/x-www-form-urlencoded',
         origin: 'https://work.weixin.qq.com',
@@ -137,7 +152,11 @@ const publishToFetchSvr = async function(refer_id, ctx) {
       if (err) {
         reject(err);
       } else {
-        resolve(body);
+        if (body.ret === 0 && res.statusCode === 200) {
+          resolve(body);
+        } else {
+          reject(new Error('sync fail'));
+        }
       }
     });
   });
@@ -147,11 +166,12 @@ const publishToFetchSvr = async function(refer_id, ctx) {
 class DetailController extends Controller {
 
   async index(ctx) {
-    await this.ctx.render('detail.tpl', { refer_id: ctx.request.query.id, userInfo: ctx.session || {} });
+    await this.ctx.render('detail.tpl', { refer_id: ctx.request.query.id, userInfo: ctx.session || {}, prj_name: ctx.request.query.prj_name });
   }
 
   async list(ctx) {
-    return this.app.mongooseDB.db.collection('package').find({ refer_id: ctx.request.query.refer_id }).toArray()
+    return this.app.mongooseDB.db.collection('package').find({ refer_id: ctx.request.query.refer_id }).sort({ create_time: -1 })
+      .toArray()
       .then(data => {
         return this.app.mongooseDB.db.collection('project').findOne(
           {
@@ -185,8 +205,6 @@ class DetailController extends Controller {
     try {
       // 写入文件
       await awaitWriteStream(stream.pipe(writeStream));
-
-      this.ctx.logger.info(mongo.ObjectID(stream.fields.refer_id));
 
       const version = (stream.fields.refer_id || '').substr(-5) + (nowDate - 0);
 
@@ -266,15 +284,18 @@ class DetailController extends Controller {
           }, {
             $set: {
               current_version: 0,
-            } }
+            },
+          }
         );
       });
-      ctx.body = { ret: 1 };
 
-      publishToFetchSvr.apply(this, [ refer_id, ctx ]);
-    } else {
-      ctx.body = { ret: -30001 };
+      return publishToFetchSvr.apply(this, [ refer_id, ctx ]).then(function() {
+        ctx.body = { ret: 1 };
+      }).catch(err => {
+        ctx.body = { ret: -30002 };
+      });
     }
+    ctx.body = { ret: -30001 };
   }
 
 
@@ -300,12 +321,15 @@ class DetailController extends Controller {
         );
       });
 
-      publishToFetchSvr.apply(this, [ refer_id, ctx ]);
 
-      ctx.body = { ret: 1 };
-    } else {
-      ctx.body = { ret: -30001 };
+      return publishToFetchSvr.apply(this, [ refer_id, ctx ]).then(function() {
+        ctx.body = { ret: 1 };
+      }).catch(err => {
+        ctx.body = { ret: -30002 };
+      });
     }
+    ctx.body = { ret: -30001 };
+
   }
 
   async publishPackage(ctx) {
@@ -336,10 +360,14 @@ class DetailController extends Controller {
 
       ctx.body = { ret: 1 };
 
-      publishToFetchSvr.apply(this, [ refer_id, ctx ]);
-    } else {
-      ctx.body = { ret: -30001 };
+      return publishToFetchSvr.apply(this, [ refer_id, ctx ]).then(function() {
+        ctx.body = { ret: 1 };
+      }).catch(err => {
+        ctx.body = { ret: -30002 };
+      });
     }
+    ctx.body = { ret: -30001 };
+
   }
 }
 

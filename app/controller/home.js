@@ -9,7 +9,8 @@ class HomeController extends Controller {
 
   async list(ctx) {
 
-    return this.app.mongooseDB.db.collection('project').find().toArray()
+    return this.app.mongooseDB.db.collection('project').find().sort({ create_time: -1 })
+      .toArray()
       .then(data => {
         ctx.body = {
           ret: 0, data };

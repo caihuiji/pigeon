@@ -23,7 +23,7 @@
                 <td>{{item.admin}}</td>
                 <td>{{item.create_time | formatDate('yyyy-MM-dd') }}  </td>
                 <td>
-                    <a :href="'/detail?id=' + item._id">查看</a> | <a @click="showEditModalDialog(item._id)" href="javascript:;">编辑</a> | <a @click="deleteProject" :data-id="item._id" href="javascript:;">删除</a>
+                    <a :href="'/detail?id=' + item._id + '&prj_name=' + encodeURIComponent(item.name)">查看</a> | <a @click="showEditModalDialog(item._id)" href="javascript:;">编辑</a> | <a @click="deleteProject" :data-id="item._id" href="javascript:;">删除</a>
                 </td>
             </tr>
             </tbody>

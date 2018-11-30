@@ -6,7 +6,13 @@
         <ol class="breadcrumb">
             {% if breadcrumb == 'detail' %}
             <li class="breadcrumb-item " aria-current="page"><a href="/">首页</a></li>
-            <li class="breadcrumb-item active" aria-current="page">详情</li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if prj_name %}
+                <span style="font-weight: 700">{{ prj_name }}</span>
+                {% else %}
+                详情
+                {% endif %}
+            </li>
             {% else %}
             <li class="breadcrumb-item active" aria-current="page">&nbsp;</li>
             {% endif %}

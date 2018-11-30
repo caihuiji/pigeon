@@ -1,5 +1,6 @@
 logs/
 app/middleware/tof.js
+app/public/upload/*
 npm-debug.log
 yarn-error.log
 node_modules/

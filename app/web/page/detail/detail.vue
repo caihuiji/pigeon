@@ -142,8 +142,16 @@
                 callback (confirm , random){
                   if(confirm){
                     return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : random })
-                      .then(data => {
-                        self.fetchData();
+                      .then(res => {
+                        if(res.data.ret == 1){
+                            self.fetchData();
+                        } else {
+                          dialog({
+                            type : "alert",
+                            title : "警告",
+                            text : "灰度发布失败，请重新发布",
+                          });
+                        }
                       })
                   }
                 }
@@ -159,8 +167,16 @@
                 callback (confirm){
                   if(confirm){
                     return axios.post('/detail/publishPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
-                      .then(data => {
-                        self.fetchData();
+                      .then(res => {
+                        if(res.data.ret == 1){
+                          self.fetchData();
+                        } else {
+                          dialog({
+                            type : "alert",
+                            title : "警告",
+                            text : "正式发布失败，请重新发布",
+                          });
+                        }
                       })
                   }
                 }
@@ -175,8 +191,16 @@
                 callback (confirm){
                   if(confirm){
                     return axios.post('/detail/recallPackage' , {id : event.target.getAttribute('data-id') ,random : 1 })
-                      .then(data => {
-                        self.fetchData();
+                      .then(res => {
+                        if(res.data.ret == 1){
+                          self.fetchData();
+                        } else {
+                          dialog({
+                            type : "alert",
+                            title : "警告",
+                            text : "撤回失败，请重新撤回",
+                          });
+                        }
                       })
                   }
                 }
@@ -191,8 +215,16 @@
                 callback (confirm){
                   if(confirm){
                     return axios.post('/detail/testPublishPackage' , {id : event.target.getAttribute('data-id')  })
-                      .then(data => {
-                        self.fetchData();
+                      .then(res => {
+                        if(res.data.ret == 1){
+                          self.fetchData();
+                        } else {
+                          dialog({
+                            type : "alert",
+                            title : "警告",
+                            text : "测试发布失败，请重新发布",
+                          });
+                        }
                       })
                   }
                 }

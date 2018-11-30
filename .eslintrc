@@ -2,6 +2,14 @@
   "extends": "eslint-config-egg",
   "rules": {
     "strict": 0,
-    "linebreak-style": "off"
+    "linebreak-style": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "args": "none",
+        "caughtErrors": "none"
+      }
+    ]
   }
 }
