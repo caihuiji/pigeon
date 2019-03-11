@@ -98,29 +98,43 @@ const publishToCdn = function(filePath, loginname, ctx) {
 };
 
 
-const publishToFetchSvr = async function(refer_id, ctx) {
+const publishToFetchSvr = async function(refer_id, ctx, syncOpt) {
+  syncOpt = syncOpt || {};
   if (!refer_id) {
     return {};
   }
 
 
-  let testOne = await this.app.mongooseDB.db.collection('package').findOne(
-    { refer_id, status: 2 }
-  );
+  let testOne = syncOpt.testOne;
+  if (!syncOpt.testOne) {
+    testOne = await this.app.mongooseDB.db.collection('package').findOne(
+      { refer_id, status: 2 }
+    );
+  }
 
-  let grayOne = await this.app.mongooseDB.db.collection('package').findOne(
-    { refer_id, status: 3 }
-  );
 
-  let publishedOne = await this.app.mongooseDB.db.collection('package').find(
-    { refer_id, status: 4 }
-  ).sort({ update_time: -1 })
-    .toArray();
+  let grayOne = syncOpt.grayOne;
+  if (!syncOpt.grayOne) {
+    grayOne = await this.app.mongooseDB.db.collection('package').findOne(
+      { refer_id, status: 3 }
+    );
+  }
+
+
+  let publishedOne = syncOpt.publishedOne;
+  if (!syncOpt.publishedOne) {
+    publishedOne = await this.app.mongooseDB.db.collection('package').find(
+      { refer_id, status: 4 }
+    ).sort({ update_time: -1 })
+      .toArray();
+
+    publishedOne = publishedOne && publishedOne.length ? publishedOne[0] : {};
+  }
 
 
   testOne = testOne || {};
   grayOne = grayOne || {};
-  publishedOne = publishedOne && publishedOne.length ? publishedOne[0] : {};
+  publishedOne = publishedOne || {};
 
   const syncJson = {
     offid: refer_id,
@@ -133,7 +147,9 @@ const publishToFetchSvr = async function(refer_id, ctx) {
 
   return new Promise((resolve, reject) => {
     request.post({
-      url: 'http://100.115.130.244:13082/wework_admin/offline_sync',
+      // url: 'http://100.115.130.244:13082/wework_admin/offline_sync',
+      url: 'http://10.49.131.222:13082/wework_admin/offline_sync',
+      // url: 'http://10.123.20.65:13082/wework_admin/offline_sync',
 
       method: 'POST',
       json: true,
@@ -272,28 +288,49 @@ class DetailController extends Controller {
     );
 
     if (findOne) {
+
+      refer_id = findOne.refer_id;
       await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
         { _id: mongo.ObjectID(ctx.request.body.id) },
         { $set: { status: 5, random: 0, update_time: new Date() - 0 } }
-      ).then(data => {
+      );
 
-        refer_id = data.value.refer_id;
-        return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+      try {
+        await publishToFetchSvr.apply(this, [ refer_id, ctx ]);
+        this.app.mongooseDB.db.collection('project').findOne(
           {
-            _id: mongo.ObjectID(data.value.refer_id),
-          }, {
-            $set: {
-              current_version: 0,
-            },
+            _id: mongo.ObjectID(refer_id),
           }
-        );
-      });
+        ).then(currentProject => {
 
-      return publishToFetchSvr.apply(this, [ refer_id, ctx ]).then(function() {
+          // 清除当前正在处理的版本
+          if (currentProject.current_version === findOne.version) {
+            return this.app.mongooseDB.db.collection('project')
+              .findOneAndUpdate(
+                {
+                  _id: mongo.ObjectID(findOne.refer_id),
+                }
+                , {
+                  $set: {
+                    current_version: 0,
+                  },
+                });
+          }
+          return {};
+
+        });
         ctx.body = { ret: 1 };
-      }).catch(err => {
+        return {};
+      } catch (e) {
+        // 回滚状态
+        await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
+          { _id: mongo.ObjectID(ctx.request.body.id) },
+          { $set: { status: findOne.status, random: findOne.random || 0, update_time: new Date() - 0 } }
+        );
+
         ctx.body = { ret: -30002 };
-      });
+        return {};
+      }
     }
     ctx.body = { ret: -30001 };
   }
@@ -306,27 +343,35 @@ class DetailController extends Controller {
     );
 
     if (findOne) {
-      await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
-        { _id: mongo.ObjectID(ctx.request.body.id) },
-        { $set: { status: 2, random: 0, update_time: new Date() - 0 } }
-      ).then(data => {
-        refer_id = data.value.refer_id;
-        return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
-          {
-            _id: mongo.ObjectID(data.value.refer_id),
-          }, {
-            $set: {
-              current_version: data.value.version,
-            } }
-        );
-      });
 
+      refer_id = findOne.refer_id;
 
-      return publishToFetchSvr.apply(this, [ refer_id, ctx ]).then(function() {
+      try {
+        await publishToFetchSvr.apply(this, [ refer_id, ctx, { testOne: {
+          version: findOne.version,
+          cdn_url: findOne.cdn_url,
+        } }]);
+
+        await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
+          { _id: mongo.ObjectID(ctx.request.body.id) },
+          { $set: { status: 2, random: 0, update_time: new Date() - 0 } }
+        ).then(data => {
+          return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+            {
+              _id: mongo.ObjectID(data.value.refer_id),
+            }, {
+              $set: {
+                current_version: data.value.version,
+              } }
+          );
+        });
+
         ctx.body = { ret: 1 };
-      }).catch(err => {
+        return {};
+      } catch (e) {
         ctx.body = { ret: -30002 };
-      });
+        return {};
+      }
     }
     ctx.body = { ret: -30001 };
 
@@ -339,32 +384,43 @@ class DetailController extends Controller {
     );
 
     if (findOne) {
-      await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
-        { _id: mongo.ObjectID(ctx.request.body.id) },
-        { $set: { status: ctx.request.body.random === 1 ? 4 : 3, random: ctx.request.body.random || 0, update_time: new Date() - 0 } }
-      ).then(data => {
-        refer_id = data.value.refer_id;
-        if (ctx.request.body.random === 1) {
-          return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
-            {
-              _id: mongo.ObjectID(data.value.refer_id),
-            }, {
-              $set: {
-                current_version: 0,
-              } }
-          );
-        }
-        return {};
 
-      });
+      refer_id = findOne.refer_id;
 
-      ctx.body = { ret: 1 };
+      try {
+        const publishOne = { testOne: {}, grayOne: {} };
+        publishOne[ ctx.request.body.random === 1 ? 'publishedOne' : 'grayOne'] = {
+          version: findOne.version,
+          cdn_url: findOne.cdn_url,
+          random: ctx.request.body.random || 0,
+        };
 
-      return publishToFetchSvr.apply(this, [ refer_id, ctx ]).then(function() {
+        await publishToFetchSvr.apply(this, [ refer_id, ctx, publishOne ]).then(function() {
+          ctx.body = { ret: 1 };
+        });
+        await this.app.mongooseDB.db.collection('package').findOneAndUpdate(
+          { _id: mongo.ObjectID(ctx.request.body.id) },
+          { $set: { status: ctx.request.body.random === 1 ? 4 : 3, random: ctx.request.body.random || 0, update_time: new Date() - 0 } }
+        ).then(data => {
+          if (ctx.request.body.random === 1) {
+            return this.app.mongooseDB.db.collection('project').findOneAndUpdate(
+              {
+                _id: mongo.ObjectID(data.value.refer_id),
+              }, {
+                $set: {
+                  current_version: 0,
+                } }
+            );
+          }
+          return {};
+
+        });
         ctx.body = { ret: 1 };
-      }).catch(err => {
+        return {};
+      } catch (e) {
         ctx.body = { ret: -30002 };
-      });
+        return {};
+      }
     }
     ctx.body = { ret: -30001 };
 

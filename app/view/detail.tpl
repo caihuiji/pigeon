@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>pigeon</title>
+    <title>螺旋丸 - 离线包发布系统</title>
     <link rel="stylesheet" href="/public/css/bootstrap.min.css">
     <link rel="stylesheet" href="/public/css/style.css">
+    <link rel="shortcut icon" href="/public/img/favicon.ico">
 </head>
 <body>
 {% set breadcrumb = "detail" %}

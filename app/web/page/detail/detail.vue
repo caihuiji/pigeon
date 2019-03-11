@@ -9,7 +9,7 @@
         <table v-if="list.length" class="table table-hover">
             <thead>
             <tr >
-                <th style="width:50px;">#</th>
+                <th style="width:30px;">#</th>
                 <th style="width:200px;">离线包-version</th>
                 <th style="width:200px;">创建时间</th>
                 <th style="width:200px;">变更时间</th>
@@ -35,7 +35,7 @@
                         &nbsp;version：{{current_version}} 发布中
                     </span>
                     <span v-else-if="item.status == 2">
-                        <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">灰度发布</a>| <a @click="deletePackage" :data-id="item._id" href="javascript:;">撤回</a> | <a :href="item.cdn_url">下载</a>
+                        <a @click="grayPublishPackage" :data-id="item._id" href="javascript:;">灰度发布</a>| <a @click="recallPackage" :data-id="item._id" href="javascript:;">撤回</a> | <a :href="item.cdn_url">下载</a>
                     </span>
                     <span v-else-if="item.status == 3">
                            <a @click="grayPublishPackage($event, item.random)" :data-id="item._id" href="javascript:;">继续灰度发布</a> | <a @click="publishPackage" :data-id="item._id" href="javascript:;">正式发布</a> | <a @click="recallPackage"  :data-id="item._id" href="javascript:;">撤回</a> | <a :href="item.cdn_url">下载</a>

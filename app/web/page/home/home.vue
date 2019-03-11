@@ -7,17 +7,19 @@
         <table v-if="list.length" class="table table-hover">
             <thead>
             <tr >
-                <th style="width:80px;">#</th>
+                <th style="width:30px;">#</th>
+                <th style="width:200px;">offid</th>
                 <th style="width:200px;">名称</th>
                 <th >描述</th>
                 <th style="width:160px;">负责人</th>
                 <th style="width:120px;">创建时间</th>
-                <th style="width:200px;">操作</th>
+                <th style="width:150px;">操作</th>
             </tr>
             </thead>
             <tbody>
             <tr v-for="(item, index) in list">
                 <th scope="row">{{index+1}}</th>
+                <td>{{item._id}}</td>
                 <td>{{item.name}}</td>
                 <td>{{item.desc}}</td>
                 <td>{{item.admin}}</td>
@@ -41,7 +43,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" v-on:click="closeModalDialog" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title" id="myModalLabel">添加项目</h4>
+                            <h4 class="modal-title" id="js_createProjectModal_title">添加项目</h4>
                         </div>
                         <div class="modal-body">
                                 <div :class="['form-group' , nameErr ? 'has-error' : '']" >
@@ -62,7 +64,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal" v-on:click="closeModalDialog">取消</button>
-                            <input  class="btn btn-primary" type="submit"  value="添加">
+                            <input  class="btn btn-primary" type="submit" id="js_createProjectModal_btn" value="添加">
                         </div>
                     </div>
                     <input type="hidden"  v-model="project.id || ''" >
@@ -133,6 +135,10 @@
                 let modal = document.querySelector('#js_modal')
                 dialog.style.display = "block";
                 modal.style.display = "block";
+
+              document.querySelector('#js_createProjectModal_btn').value = '添加';
+              document.querySelector('#js_createProjectModal_title').innerText = '添加项目';
+
                 setTimeout( () => {
                     dialog.classList.add('in');
                     modal.classList.add('in');
@@ -165,6 +171,8 @@
               let modal = document.querySelector('#js_modal')
               dialog.style.display = "block";
               modal.style.display = "block";
+              document.querySelector('#js_createProjectModal_btn').value = '保存';
+              document.querySelector('#js_createProjectModal_title').innerText = '编辑项目';
               setTimeout( () => {
                 dialog.classList.add('in');
                 modal.classList.add('in');
@@ -185,7 +193,7 @@
             },
 
             validateFormData (formData){
-                if (formData.name.length <2 || formData.name.length >12){
+                if (formData.name.length <2 || formData.name.length >20){
                     this.nameErr = true;
                 } else {
                     this.nameErr = false;
