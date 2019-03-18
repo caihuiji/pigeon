@@ -12,7 +12,7 @@ const crypto = require('crypto');
 const helper = require('./common/helper');
 
 
-const appendVersionFile = async (filePath, versionFileData, ctx) => {
+const processPkg = async (filePath, versionFileData, ctx) => {
   const archive = archiver('zip');
   ctx.logger.info('unzip file :' + filePath);
   const folderPath = path.join(filePath.replace('.zip', ''), '/');
@@ -47,7 +47,40 @@ const appendVersionFile = async (filePath, versionFileData, ctx) => {
 
   await versionWritePromise;
 
-  await helper.genVerify(path.join(folderPath,'/'), ctx);
+  const verifyJson = await helper.genVerify(ctx, path.join(folderPath, '/'));
+
+  const verifyJsonStr = JSON.stringify(verifyJson);
+
+  const verifyWrite = fs.createWriteStream(path.join(folderPath, 'verify.json'));
+  verifyWrite.write(verifyJsonStr);
+  verifyWrite.end('');
+
+  const verifyWritePromise = new Promise((resolve, reject) => {
+    verifyWrite.on('finish', () => {
+      resolve();
+    });
+    verifyWrite.on('error', () => {
+      reject({});
+    });
+  });
+
+  await verifyWritePromise;
+
+  const signatureStr = await helper.genSignature(ctx, verifyJsonStr);
+  const signWrite = fs.createWriteStream(path.join(folderPath, 'verify.signature'));
+  signWrite.write(signatureStr);
+  signWrite.end('');
+
+  const signWritePromise = new Promise((resolve, reject) => {
+    signWrite.on('finish', () => {
+      resolve();
+    });
+    signWrite.on('error', () => {
+      reject({});
+    });
+  });
+
+  await signWritePromise;
 
   const verPath = filePath.replace('.zip', '_ver.zip');
   ctx.logger.info('archive file :' + verPath);
@@ -106,7 +139,9 @@ const publishToCdn = function(filePath, loginname, ctx) {
 const publishToFetchSvr = async function(refer_id, ctx, syncOpt) {
   syncOpt = syncOpt || {};
   if (!refer_id) {
-    return {};
+    return new Promise(function(resolve) {
+      resolve({});
+    });
   }
 
 
@@ -194,7 +229,7 @@ class DetailController extends Controller {
     await this.ctx.render('detail.tpl', {
       refer_id: ctx.request.query.id,
       userInfo: ctx.session || {},
-      prj_name: ctx.request.query.prj_name
+      prj_name: ctx.request.query.prj_name,
     });
   }
 
@@ -241,7 +276,15 @@ class DetailController extends Controller {
 
       const version = (stream.fields.refer_id || '').substr(-5) + (nowDate - 0);
 
-      const appendResult = await appendVersionFile(targetPath, { version, create_time: nowDate - 0 }, ctx);
+      const appendResult = {};
+
+      try {
+        appendResult = await processPkg(targetPath, { version, create_time: nowDate - 0 }, ctx);
+      } catch (e) {
+        ctx.logger.error(' processFile error ', e);
+        ctx.body = { ret: -2 };
+        return;
+      }
 
 
       if (!appendResult.filepath) {
@@ -294,7 +337,7 @@ class DetailController extends Controller {
             }, {
               $set: {
                 current_version: 0,
-              }
+              },
             }
           );
       })
@@ -379,8 +422,8 @@ class DetailController extends Controller {
           testOne: {
             version: findOne.version,
             cdn_url: findOne.cdn_url,
-          }
-        } ]);
+          },
+        }]);
 
         await this.app.mongooseDB.db.collection('package')
           .findOneAndUpdate(
@@ -395,7 +438,7 @@ class DetailController extends Controller {
                 }, {
                   $set: {
                     current_version: data.value.version,
-                  }
+                  },
                 }
               );
           });
@@ -441,8 +484,8 @@ class DetailController extends Controller {
               $set: {
                 status: ctx.request.body.random === 1 ? 4 : 3,
                 random: ctx.request.body.random || 0,
-                update_time: new Date() - 0
-              }
+                update_time: new Date() - 0,
+              },
             }
           )
           .then(data => {
@@ -454,7 +497,7 @@ class DetailController extends Controller {
                   }, {
                     $set: {
                       current_version: 0,
-                    }
+                    },
                   }
                 );
             }
