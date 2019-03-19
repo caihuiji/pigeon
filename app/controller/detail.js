@@ -107,7 +107,6 @@ const publishToCdn = function(filePath, loginname, ctx) {
   ctx.logger.info('should publish filepath : ', filePath);
   return new Promise(function(resolve, reject) {
     request.post({
-      url: 'http://ops.itil.rdgz.org/change_mgr/cgi-bin/cdn_upload_cgi',
       method: 'POST',
       json: true,
       timeout: 10000, // 10s
@@ -191,7 +190,7 @@ const publishToFetchSvr = async function(refer_id, ctx, syncOpt) {
 
   return new Promise((resolve, reject) => {
     request.post({
-  
+
 
       method: 'POST',
       json: true,
