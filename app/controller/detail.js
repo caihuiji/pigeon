@@ -191,9 +191,7 @@ const publishToFetchSvr = async function(refer_id, ctx, syncOpt) {
 
   return new Promise((resolve, reject) => {
     request.post({
-      // url: 'http://100.115.130.244:13082/wework_admin/offline_sync',
-      url: 'http://10.49.131.222:13082/wework_admin/offline_sync',
-      // url: 'http://10.123.20.65:13082/wework_admin/offline_sync',
+  
 
       method: 'POST',
       json: true,
