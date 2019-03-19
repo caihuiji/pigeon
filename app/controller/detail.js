@@ -5,7 +5,7 @@ const awaitWriteStream = require('await-stream-ready').write;
 const awaitReadStream = require('await-stream-ready').read;
 const sendToWormhole = require('stream-wormhole');
 const mongo = require('mongodb');
-const unzip = require('unzip');
+const unzip = require('unzipper');
 const archiver = require('archiver');
 const request = require('request');
 const crypto = require('crypto');
@@ -276,7 +276,7 @@ class DetailController extends Controller {
 
       const version = (stream.fields.refer_id || '').substr(-5) + (nowDate - 0);
 
-      const appendResult = {};
+      let appendResult = {};
 
       try {
         appendResult = await processPkg(targetPath, { version, create_time: nowDate - 0 }, ctx);

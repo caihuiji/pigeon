@@ -18,7 +18,7 @@ const privateKeyStr =
   'da8PPU10+qGZV91Ca0jpbZ2fnymXjqocDEr7M4ItLI8OqksMfWCuCgECQCSb0MDj\n' +
   'N+ZZfULlXGAYK8XxD/SVIcWAi2s7bDiPmjyFTDfVPPu7tKgPbuQu5UArZJz1Bqoe\n' +
   'csgz655cEXrLqXs=\n' +
-  '-----END PRIVATE KEY-----'
+  '-----END PRIVATE KEY-----';
 
 module.exports = {
   md5(str) {
@@ -27,7 +27,7 @@ module.exports = {
       .digest('hex');
   },
 
-  genVerify(ctx, rootFolderPath , ) {
+  genVerify(ctx, rootFolderPath) {
     const verifyJson = {};
     const self = this;
     let isMatchError = false;
@@ -43,7 +43,7 @@ module.exports = {
 
         let fileLength = files.length;
 
-        if (fileLength == 0) {
+        if (fileLength === 0) {
           callback();
         }
 
@@ -54,9 +54,9 @@ module.exports = {
           }
         };
 
-        files.forEach((filename) => {
+        files.forEach(filename => {
 
-          let filePath = path.join(folderPath, filename);
+          const filePath = path.join(folderPath, filename);
           ctx.logger.debug(`  - forEach files ${filePath}`);
 
           fs.stat(filePath, function(err, stats) {
@@ -65,21 +65,21 @@ module.exports = {
               ctx.logger.error(' - forEach error', err);
               countDown();
             } else {
-              let isFile = stats.isFile();
-              let isDir = stats.isDirectory();
+              const isFile = stats.isFile();
+              const isDir = stats.isDirectory();
 
 
               if (isFile && /\.(png|jpg|jpeg|gif|html|css|js)$/i.test(filename)) {
                 fs.readFile(filePath, (err, data) => {
-                  let md5 = self.md5(data);
-                  let md5Path = filePath.replace(rootFolderPath, '')
+                  const md5 = self.md5(data);
+                  const md5Path = filePath.replace(rootFolderPath, '')
                     .replace(/\\/gi, '/');
                   ctx.logger.info(`md5:  ${md5Path} = ${md5}`);
                   verifyJson[ md5Path ] = md5;
                   countDown();
                 });
               } else if (isDir && !/^\./i.test(filename)) {
-                fileDetect(filePath, (err) => {
+                fileDetect(filePath, err => {
                   countDown();
                 });
               } else {
@@ -94,7 +94,7 @@ module.exports = {
     }
 
     return new Promise((resolve, reject) => {
-      fileDetect(rootFolderPath, (err) => {
+      fileDetect(rootFolderPath, err => {
         if (err) {
           ctx.logger.info('md5 error');
           reject(err);
